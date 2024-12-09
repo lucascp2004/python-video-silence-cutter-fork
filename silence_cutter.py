@@ -51,7 +51,19 @@ def findSilences(filename, dB = -35):
   #return silence_section_list
   return time_list
 
+def add_silence_gap(silences,gap):
 
+    new_silences=[]
+    for index in range(0,len(silences),2):
+        
+        start=silences[index]
+        end=silences[index+1]
+        if(end-start)<=gap*2:
+            
+            continue;
+        new_silences.append(start+gap)
+        new_silences.append(end-gap)
+    return new_silences
 
 def getVideoDuration(filename:str) -> float:
   logging.debug(f"getVideoDuration ()")
@@ -123,14 +135,18 @@ def ffmpeg_run (file, videoFilter, audioFilter, outfile):
 
 
 
-def cut_silences(infile, outfile, dB = -35):
+def cut_silences(infile, outfile, dB = -35,gap = 0):
   logging.debug(f"cut_silences ()")
   logging.debug(f"    - infile = {infile}")
   logging.debug(f"    - outfile = {outfile}")
   logging.debug(f"    - dB = {dB}")
+  logging.debug(f"    - gap = {gap}")
 
   print ("detecting silences")
   silences = findSilences (infile,dB)
+  if gap>0:
+    silences = add_silence_gap(silences,gap)
+  
   duration = getVideoDuration (infile)
   videoSegments = getSectionsOfNewVideo (silences, duration)
 
@@ -190,8 +206,10 @@ def main():
   if (len(args) >= 3):
     dB = args[2]
 
+  if (len(args) >= 3):
+    gap = int(args[3])
 
-  cut_silences (infile, outfile, dB)
+  cut_silences (infile, outfile, dB,gap)
 
 
 if __name__ == "__main__":
